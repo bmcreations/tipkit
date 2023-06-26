@@ -54,10 +54,6 @@ dependencies {
     implementation(libs.kotlin.serialization.json)
     implementation(libs.kotlin.datetime)
     implementation(libs.androidx.datastore)
-    implementation(libs.androidx.hilt.work)
-    implementation(libs.dagger.hilt.android)
-    kapt(libs.dagger.hilt.androidCompiler)
-    kapt(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

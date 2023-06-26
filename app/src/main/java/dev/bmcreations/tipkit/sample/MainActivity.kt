@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import dev.bmcreations.tipkit.TipInterface
 import dev.bmcreations.tipkit.TipScaffold
 import dev.bmcreations.tipkit.TipsEngine
 import dev.bmcreations.tipkit.sample.ui.theme.AndroidTipKitTheme
@@ -25,6 +27,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        tips.configure(EntryPointAccessors.fromApplication(this, TipInterface::class.java))
         tips.invalidateAllTips()
 
         setContent {

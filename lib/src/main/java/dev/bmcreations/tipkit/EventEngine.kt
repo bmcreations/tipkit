@@ -8,71 +8,25 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.PolymorphicSerializer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonContentPolymorphicSerializer
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
-object DataModule {
-    @Singleton
-    @Provides
-    fun provideDataLoadingScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    @Singleton
-    @Provides
-    fun providesEventEngine(
-        @ApplicationContext context: Context,
-        dataScope: CoroutineScope,
-    ) = EventEngine(context, dataScope)
-}
-
-class EventEngine @Inject constructor(
-    @ApplicationContext context: Context,
-    private val dataScope: CoroutineScope,
+class EventEngine(
+    context: Context,
+    private val dataScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
-    private val module = SerializersModule {
-        polymorphic(Any::class) {
-            subclass(Boolean::class)
-            subclass(Int::class)
-            subclass(Double::class)
-            subclass(Long::class)
-            subclass(Short::class)
-            subclass(Float::class)
-            subclass(String::class)
-        }
-    }
-
     private val jsonDecoder by lazy {
         Json {
             ignoreUnknownKeys = true
