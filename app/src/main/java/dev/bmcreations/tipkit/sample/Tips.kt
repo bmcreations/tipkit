@@ -10,7 +10,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.bmcreations.tipkit.EventEngine
-import dev.bmcreations.tipkit.RuleEvaluation
+import dev.bmcreations.tipkit.EligibilityCriteria
 import dev.bmcreations.tipkit.Tip
 import dev.bmcreations.tipkit.TipInterface
 import dev.bmcreations.tipkit.Trigger
@@ -48,7 +48,7 @@ class AnchorTip @Inject constructor(
         return { Image(Icons.Rounded.FavoriteBorder, contentDescription = null) }
     }
 
-    override suspend fun rules(): List<RuleEvaluation> {
+    override suspend fun criteria(): List<EligibilityCriteria> {
         val clicks = clicks.events.firstOrNull().orEmpty()
         val toggledOn = toggle.events.firstOrNull()?.lastOrNull()?.value as? Boolean ?: false
 

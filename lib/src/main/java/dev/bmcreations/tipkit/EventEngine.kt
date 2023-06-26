@@ -232,7 +232,7 @@ class EventEngine(
     }
 }
 
-typealias RuleEvaluation = () -> Boolean
+typealias EligibilityCriteria = () -> Boolean
 
 class Trigger(
     val id: String,
