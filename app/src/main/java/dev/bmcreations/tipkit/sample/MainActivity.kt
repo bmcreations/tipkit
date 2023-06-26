@@ -1,0 +1,54 @@
+package dev.bmcreations.tipkit.sample
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.border
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import dagger.hilt.android.AndroidEntryPoint
+import dev.bmcreations.tipkit.TipScaffold
+import dev.bmcreations.tipkit.TipsEngine
+import dev.bmcreations.tipkit.sample.ui.theme.AndroidTipKitTheme
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var tips: TipsEngine
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        tips.invalidateAllTips()
+
+        setContent {
+            AndroidTipKitTheme {
+                TipScaffold(tipsEngine = tips) {
+                    Content()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Anchor(modifier: Modifier = Modifier) {
+    Text(
+        text = "I am the anchor",
+        modifier = modifier.border(1.dp, Color.Black)
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    AndroidTipKitTheme {
+        Anchor()
+    }
+}
