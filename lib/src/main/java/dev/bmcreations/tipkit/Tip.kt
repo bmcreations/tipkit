@@ -3,11 +3,8 @@ package dev.bmcreations.tipkit
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.merge
 
-abstract class Tip {
+abstract class Tip(private val engine: EventEngine) {
     private val triggers = mutableListOf<Trigger>()
     private val events: Flow<List<TriggerOccurrenceEvent>>
         get() {
@@ -22,9 +19,13 @@ abstract class Tip {
     open fun image(): @Composable () -> Unit = {}
     open fun actions(): List<TipAction> = emptyList()
     open fun observe(): Flow<List<TriggerOccurrenceEvent>> = events
-    open suspend fun hasBeenSeen(): Boolean = false
+    suspend fun hasBeenSeen(): Boolean {
+        return engine.isComplete(this::class.java.simpleName)
+    }
     open suspend fun rules(): List<RuleEvaluation> = listOf { true }
-    open suspend fun dismiss() = Unit
+    suspend fun dismiss() {
+        engine.complete(this::class.java.simpleName)
+    }
     open suspend fun show(): Boolean {
         return rules().all { it() } && !hasBeenSeen()
     }

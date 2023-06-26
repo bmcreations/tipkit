@@ -24,8 +24,8 @@ interface SampleTips : TipInterface {
 }
 
 class AnchorTip @Inject constructor(
-    private val eventEngine: EventEngine,
-) : Tip() {
+    eventEngine: EventEngine,
+) : Tip(eventEngine) {
     val clicks = Trigger(
         id = "clicks",
         engine = eventEngine
@@ -48,10 +48,6 @@ class AnchorTip @Inject constructor(
         return { Image(Icons.Rounded.FavoriteBorder, contentDescription = null) }
     }
 
-    override suspend fun hasBeenSeen(): Boolean {
-        return eventEngine.isComplete(this::class.java.simpleName)
-    }
-
     override suspend fun rules(): List<RuleEvaluation> {
         val clicks = clicks.events.firstOrNull().orEmpty()
         val toggledOn = toggle.events.firstOrNull()?.lastOrNull()?.value as? Boolean ?: false
@@ -60,9 +56,5 @@ class AnchorTip @Inject constructor(
             { clicks.count() >= 5 },
             { toggledOn }
         )
-    }
-
-    override suspend fun dismiss() {
-        eventEngine.complete(this::class.java.simpleName)
     }
 }
