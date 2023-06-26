@@ -1,6 +1,7 @@
 package dev.bmcreations.tipkit.sample
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
@@ -12,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import dev.bmcreations.tipkit.TipAction
+import dev.bmcreations.tipkit.TipActionNavigation
 import dev.bmcreations.tipkit.TipInterface
 import dev.bmcreations.tipkit.TipScaffold
 import dev.bmcreations.tipkit.TipsEngine
@@ -30,9 +33,18 @@ class MainActivity : ComponentActivity() {
         tips.configure(EntryPointAccessors.fromApplication(this, TipInterface::class.java))
         tips.invalidateAllTips()
 
+        val tipNavigation = object : TipActionNavigation {
+            override fun onActionClicked(action: TipAction) {
+                Toast.makeText(this@MainActivity, "clicked ${action.id}", Toast.LENGTH_SHORT).show()
+            }
+
+        }
         setContent {
             AndroidTipKitTheme {
-                TipScaffold(tipsEngine = tips) {
+                TipScaffold(
+                    tipsEngine = tips,
+                    navigator = tipNavigation,
+                ) {
                     Content()
                 }
             }

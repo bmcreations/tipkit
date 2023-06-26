@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.bmcreations.tipkit.EventEngine
 import dev.bmcreations.tipkit.EligibilityCriteria
+import dev.bmcreations.tipkit.EventEngine
 import dev.bmcreations.tipkit.Tip
+import dev.bmcreations.tipkit.TipAction
+import dev.bmcreations.tipkit.TipActionNavigation
 import dev.bmcreations.tipkit.TipInterface
 import dev.bmcreations.tipkit.Trigger
 import kotlinx.coroutines.flow.firstOrNull
@@ -37,15 +39,37 @@ class AnchorTip @Inject constructor(
     ).also { await(it) }
 
     override fun title(): @Composable () -> Unit {
-        return { Text(text = "Test tip title", style = MaterialTheme.typography.titleLarge) }
+        return {
+            Text(
+                text = "Remember",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
     }
 
     override fun message(): @Composable () -> Unit {
-        return { Text(text = "Test message") }
+        return {
+            Text(
+                text = "With great power, comes great responsibility",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 
     override fun asset(): @Composable () -> Unit {
-        return { Image(Icons.Rounded.FavoriteBorder, contentDescription = null) }
+        return {
+            Image(
+                imageVector = Icons.Rounded.FavoriteBorder,
+                contentDescription = null
+            )
+        }
+    }
+
+    override fun actions(): List<TipAction> {
+        return listOf(
+            TipAction("learn-more", "Learn More")
+        )
     }
 
     override suspend fun criteria(): List<EligibilityCriteria> {

@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-abstract class Tip(private val engine: EventEngine) {
+abstract class Tip(
+    private val engine: EventEngine,
+) {
     private val triggers = mutableListOf<Trigger>()
     private val events: Flow<List<TriggerOccurrenceEvent>>
         get() {
