@@ -12,6 +12,8 @@ class TipsEngine(
     var tips: TipInterface = object : TipInterface {}
         private set
 
+    val flows: MutableMap<String, List<Tip>> = mutableMapOf()
+
     fun configure(implementation: TipInterface) {
         tips = implementation
     }
@@ -19,5 +21,15 @@ class TipsEngine(
     fun invalidateAllTips() {
         eventsEngine.clearCompletions()
         eventsEngine.removeAllOccurrences()
+    }
+
+    fun associateTipWithFlow(tip: Tip, order: Int, flowId: String) {
+        val tipsInFlow = flows[flowId].orEmpty()
+        if (tipsInFlow.isEmpty() || tipsInFlow.lastIndex < order) {
+            flows[flowId] = tipsInFlow + tip
+        } else {
+            tipsInFlow.toMutableList()[order] = tip
+            flows[flowId] = tipsInFlow
+        }
     }
 }

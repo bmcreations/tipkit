@@ -3,6 +3,7 @@ package dev.bmcreations.tipkit.sample
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,21 +14,31 @@ import dev.bmcreations.tipkit.EligibilityCriteria
 import dev.bmcreations.tipkit.EventEngine
 import dev.bmcreations.tipkit.Tip
 import dev.bmcreations.tipkit.TipAction
-import dev.bmcreations.tipkit.TipActionNavigation
 import dev.bmcreations.tipkit.TipInterface
+import dev.bmcreations.tipkit.TipsEngine
 import dev.bmcreations.tipkit.Trigger
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface SampleTips : TipInterface {
     val anchor: AnchorTip
+    val anchor2: Anchor2Tip
 }
 
+@Singleton
 class AnchorTip @Inject constructor(
     eventEngine: EventEngine,
-) : Tip(eventEngine) {
+    tipEngine: TipsEngine
+) : Tip(eventEngine, tipEngine) {
+
+    init {
+        flowPosition = 0
+        flowId = "onboarding-flow"
+    }
+
     val clicks = Trigger(
         id = "clicks",
         engine = eventEngine
@@ -68,7 +79,7 @@ class AnchorTip @Inject constructor(
 
     override fun actions(): List<TipAction> {
         return listOf(
-            TipAction("learn-more", "Learn More")
+            TipAction(name,"learn-more", "Learn More")
         )
     }
 
@@ -80,5 +91,50 @@ class AnchorTip @Inject constructor(
             { clicks.count() >= 5 },
             { toggledOn }
         )
+    }
+}
+
+@Singleton
+class Anchor2Tip @Inject constructor(
+    eventEngine: EventEngine,
+    tipEngine: TipsEngine
+) : Tip(eventEngine, tipEngine) {
+
+    init {
+        flowPosition = 1
+        flowId = "onboarding-flow"
+    }
+
+    override fun title(): @Composable () -> Unit {
+        return {
+            Text(
+                text = "Also",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }
+
+    override fun message(): @Composable () -> Unit {
+        return {
+            Text(
+                text = "You are your only competition",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+
+    override fun asset(): @Composable () -> Unit {
+        return {
+            Image(
+                imageVector = Icons.Rounded.Star,
+                contentDescription = null
+            )
+        }
+    }
+
+    override suspend fun criteria(): List<EligibilityCriteria> {
+        val priorTipSeen = flow.find { it.name == "anchortip" }?.hasBeenSeen() ?: false
+        return listOf( { priorTipSeen } )
     }
 }

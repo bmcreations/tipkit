@@ -2,13 +2,36 @@ package dev.bmcreations.tipkit
 
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 
 abstract class Tip(
     private val engine: EventEngine,
+    private val tipEngine: TipsEngine
 ) {
+    val name: String
+        get() = this::class.java.simpleName.lowercase()
+
+    // region flow control
+    private var wasHidden: Boolean = false
+
+    var flowPosition: Int = 0
+    var flowId: String? = null
+        set(value) {
+            if (value != null) {
+                tipEngine.associateTipWithFlow(this, flowPosition, value)
+            }
+            field = value
+        }
+
+    val flow: List<Tip>
+        get() = flowId?.let {
+            tipEngine.flows[it]
+    }.orEmpty()
+    // endregion
+
     private val triggers = mutableListOf<Trigger>()
-    private val events: Flow<List<TriggerOccurrenceEvent>>
+    private val events: Flow<List<Event.TriggerOccurrence>>
         get() {
             val flows = triggers.map { it.events }
             return combine(*flows.toTypedArray()) { it.toList().flatten() }
@@ -17,7 +40,7 @@ abstract class Tip(
     /**
      * Registers the [trigger] for watching events
      */
-    open fun await(trigger: Trigger) = triggers.add(trigger)
+    open fun await(trigger: Trigger) = triggers.add(trigger.copy(id = "$name-${trigger.id}"))
 
     // region UI configuration
     open fun asset(): @Composable () -> Unit = {}
@@ -30,7 +53,9 @@ abstract class Tip(
     /**
      * event stream for [triggers]
      */
-    open fun observe(): Flow<List<TriggerOccurrenceEvent>> = events
+    open fun observe(): Flow<List<Event>> = events
+
+    val flowContinuation: MutableSharedFlow<Unit> = MutableSharedFlow()
 
     /**
      * Eligibility criteria for whether this tip should show
@@ -42,22 +67,34 @@ abstract class Tip(
      * for display.
      */
     suspend fun show(): Boolean {
-        return criteria().all { it() } && !hasBeenSeen()
+        return criteria().all { it() }
     }
 
     /**
      * Whether or not this tip has been displayed
      */
     suspend fun hasBeenSeen(): Boolean {
-        return engine.isComplete(this::class.java.simpleName)
+        if (flow.isNotEmpty()) {
+            return wasHidden
+        }
+        return engine.isComplete(name)
     }
 
     /**
      * Marks the tip completed
      */
     suspend fun dismiss() {
-        engine.complete(this::class.java.simpleName)
+        if (flow.isNotEmpty()) {
+            // if all other tips (not including this one) have been seen, then we can mark them all as hidden
+            if (flow.all { it.wasHidden }) {
+                engine.complete(name)
+            } else {
+                wasHidden = true
+                // trigger show of next tip in flow
+                flow.getOrNull(flowPosition + 1)?.flowContinuation?.emit(Unit)
+            }
+        }
     }
 }
 
-data class TipAction(val id: String, val title: String)
+data class TipAction(val tipId: String, val id: String, val title: String)

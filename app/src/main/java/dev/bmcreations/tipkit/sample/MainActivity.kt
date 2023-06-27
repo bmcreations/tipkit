@@ -30,7 +30,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        tips.configure(EntryPointAccessors.fromApplication(this, TipInterface::class.java))
+        tips.configure(
+            implementation = EntryPointAccessors.fromApplication(this, TipInterface::class.java),
+        )
+
         tips.invalidateAllTips()
 
         val tipNavigation = object : TipActionNavigation {

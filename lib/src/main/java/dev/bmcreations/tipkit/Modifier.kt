@@ -36,7 +36,7 @@ fun Modifier.popoverTip(
     val tipProvider = LocalTipProvider.current
     LaunchedEffect(tip) {
         tip.observe()
-            .filterNot { tip.hasBeenSeen() || tipProvider.isTipShowing }
+            .filterNot { tip.hasBeenSeen() }
             .map { tip.show() }
             .distinctUntilChanged()
             .filter { it }
@@ -52,6 +52,24 @@ fun Modifier.popoverTip(
                 )
             }
             .launchIn(this)
+
+        tip.flowContinuation
+            .map { tip.show() }
+            .distinctUntilChanged()
+            .filter { it }
+            .onEach {
+                tipProvider.show(
+                    TipLocation(
+                        tip = tip,
+                        content = tipScope.buildTip(tip),
+                        anchorPosition = position,
+                        anchorSize = size,
+                        alignment = alignment
+                    )
+                )
+            }
+            .launchIn(this)
+
     }
 
     return@composed Modifier.onPlaced {

@@ -1,9 +1,13 @@
 package dev.bmcreations.tipkit.sample
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -54,6 +58,14 @@ fun Content() {
                     .padding(top = 32.dp)
                     .popoverTip(tips.anchor),
             )
+
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                Image(
+                    modifier = Modifier.popoverTip(tips.anchor2),
+                    imageVector = Icons.Rounded.Build,
+                    contentDescription = null
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
             Text(text = "Click count:$clicks")
             Switch(

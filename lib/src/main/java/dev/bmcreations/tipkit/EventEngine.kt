@@ -178,37 +178,37 @@ class EventEngine(
                     }.getOrNull()
                 }.map { event ->
                     when (event) {
-                        is BooleanEvent -> TriggerOccurrenceEvent(
+                        is BooleanEvent -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.value
                         )
 
-                        is DoubleEvent -> TriggerOccurrenceEvent(
+                        is DoubleEvent -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.value
                         )
 
-                        is FloatEvent -> TriggerOccurrenceEvent(
+                        is FloatEvent -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.value
                         )
 
-                        is IntEvent -> TriggerOccurrenceEvent(
+                        is IntEvent -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.value
                         )
 
-                        is LongEvent -> TriggerOccurrenceEvent(
+                        is LongEvent -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.value
                         )
 
-                        else -> TriggerOccurrenceEvent(
+                        else -> Event.TriggerOccurrence(
                             id = event.id,
                             timestamp = event.timestamp,
                             value = event.timestamp
@@ -234,10 +234,10 @@ class EventEngine(
 
 typealias EligibilityCriteria = () -> Boolean
 
-class Trigger(
+data class Trigger(
     val id: String,
     val engine: EventEngine,
-    val events: Flow<List<TriggerOccurrenceEvent>> = engine.occurrences().map { it.filter { e -> e.id == id } }.onEmpty { emit(emptyList()) },
+    val events: Flow<List<Event.TriggerOccurrence>> = engine.occurrences().map { it.filter { e -> e.id == id } }.onEmpty { emit(emptyList()) },
 ) {
     fun record() {
         engine.recordTriggerOccurrence(this)
@@ -295,10 +295,17 @@ private data class FloatEvent(
     val value: Float
 ) : DbTriggerOccurrenceEvent()
 
-@Serializable
-data class TriggerOccurrenceEvent(
-    val id: String,
-    val timestamp: Instant,
-    @Polymorphic
-    val value: Any
-)
+sealed interface Event {
+    @Serializable
+    data class TriggerOccurrence(
+        val id: String,
+        val timestamp: Instant,
+        @Polymorphic
+        val value: Any
+    ): Event
+
+    data class Completion(
+        val id: String,
+        val timestamp: Instant
+    ): Event
+}
