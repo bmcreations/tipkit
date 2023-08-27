@@ -4,7 +4,7 @@ Android TipKit
 ## License
 
 ```text
-Copyright 2020 bmcreations
+Copyright 2023 bmcreations
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
