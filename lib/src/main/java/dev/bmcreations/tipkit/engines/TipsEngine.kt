@@ -1,6 +1,7 @@
-package dev.bmcreations.tipkit
+package dev.bmcreations.tipkit.engines
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import dev.bmcreations.tipkit.Tip
 
 interface TipInterface
 

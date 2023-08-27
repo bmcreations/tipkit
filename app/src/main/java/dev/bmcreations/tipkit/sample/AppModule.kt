@@ -6,8 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dev.bmcreations.tipkit.EventEngine
-import dev.bmcreations.tipkit.TipsEngine
+import dev.bmcreations.tipkit.engines.EventEngine
+import dev.bmcreations.tipkit.engines.TipsEngine
 import javax.inject.Singleton
 
 @Module

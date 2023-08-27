@@ -1,6 +1,11 @@
 package dev.bmcreations.tipkit
 
 import androidx.compose.runtime.Composable
+import dev.bmcreations.tipkit.engines.EligibilityCriteria
+import dev.bmcreations.tipkit.engines.Event
+import dev.bmcreations.tipkit.engines.EventEngine
+import dev.bmcreations.tipkit.engines.TipsEngine
+import dev.bmcreations.tipkit.engines.Trigger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
@@ -86,7 +91,7 @@ abstract class Tip(
     suspend fun dismiss() {
         if (flow.isNotEmpty()) {
             // if all other tips (not including this one) have been seen, then we can mark them all as hidden
-            if (flow.all { it.wasHidden }) {
+            if (flow.all { it.hasBeenSeen() }) {
                 engine.complete(name)
             } else {
                 wasHidden = true

@@ -15,9 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import dev.bmcreations.tipkit.TipAction
 import dev.bmcreations.tipkit.TipActionNavigation
-import dev.bmcreations.tipkit.TipInterface
+import dev.bmcreations.tipkit.engines.TipInterface
 import dev.bmcreations.tipkit.TipScaffold
-import dev.bmcreations.tipkit.TipsEngine
+import dev.bmcreations.tipkit.engines.TipsEngine
 import dev.bmcreations.tipkit.sample.ui.theme.AndroidTipKitTheme
 import javax.inject.Inject
 

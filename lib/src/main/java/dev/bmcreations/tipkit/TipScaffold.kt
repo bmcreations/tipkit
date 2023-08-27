@@ -1,6 +1,8 @@
 package dev.bmcreations.tipkit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,30 +29,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterStart
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.bmcreations.tipkit.data.InlineTipData
+import dev.bmcreations.tipkit.data.PopupData
+import dev.bmcreations.tipkit.data.TipPresentation
+import dev.bmcreations.tipkit.engines.LocalTipsEngine
+import dev.bmcreations.tipkit.engines.TipsEngine
+import dev.bmcreations.tipkit.utils.getCoordinatesForPlacement
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-
-interface TipScope {
-    fun buildTip(
-        tip: Tip,
-    ): @Composable () -> Unit
-}
-
-class NoOpTipScopeImpl : TipScope {
-
-    override fun buildTip(tip: Tip): @Composable () -> Unit {
-        return {}
-    }
-}
 
 object TipDefaults {
     val SurfaceColor: Color
@@ -58,100 +53,112 @@ object TipDefaults {
     val ContentColor: Color
         @Composable get() = MaterialTheme.colorScheme.onBackground
 
-    @Composable
-    fun Content(tip: Tip) {
-        val tipProvider = LocalTipProvider.current
+    val Alignment: Alignment = CenterStart
+    val Padding: Dp = 8.dp
 
+    @Composable
+    private fun TipContainer(content: @Composable () -> Unit) {
         Surface(
             shape = MaterialTheme.shapes.small,
             color = SurfaceColor,
             contentColor = ContentColor,
             shadowElevation = 8.dp,
             tonalElevation = 0.dp,
+            border = if (isSystemInDarkTheme()) BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline
+            ) else null,
         ) {
+            content()
+        }
+
+    }
+
+    @Composable
+    private fun TipContents(tip: Tip, onDismiss: () -> Unit = { }) {
+        val tipProvider = LocalTipProvider.current
+
+        Row(
+            verticalAlignment = CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tip.asset()()
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                tip.title()()
+                tip.message()()
+            }
+            Icon(
+                modifier = Modifier.clickable {
+                    tipProvider.dismiss()
+                    onDismiss()
+                },
+                imageVector = Icons.Default.Close,
+                contentDescription = "dismiss tip"
+            )
+        }
+
+        Row {
+            Spacer(Modifier.width(30.dp))
+            Column(
+                modifier = Modifier.padding(top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (tip.actions().isNotEmpty()) {
+                    Divider(color = DividerDefaults.color.copy(alpha = 0.44f))
+                    tip.actions().onEach {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { tipProvider.onActionClicked(it) },
+                            text = it.title,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun PopupContent(tip: Tip) {
+        TipContainer {
             val screenWidth = LocalConfiguration.current.screenWidthDp.dp
             Column(
                 modifier = Modifier
                     .padding(4.dp)
                     .widthIn(max = screenWidth * 0.6f),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    tip.asset()()
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        tip.title()()
-                        tip.message()()
-                    }
-                    Icon(
-                        modifier = Modifier.clickable { tipProvider.dismiss() },
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "dismiss tip"
-                    )
-                }
+                TipContents(tip = tip)
+            }
+        }
+    }
 
-                Row {
-                    Spacer(Modifier.width(30.dp))
-                    Column(
-                        modifier = Modifier.padding(top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        if (tip.actions().isNotEmpty()) {
-                            Divider(color = DividerDefaults.color.copy(alpha = 0.44f))
-                            tip.actions().onEach {
-                                Text(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { tipProvider.onActionClicked(it) },
-                                    text = it.title,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
+    @Composable
+    fun InlineContent(tip: Tip, onDismiss: () -> Unit) {
+        TipContainer {
+            Column(
+                modifier = Modifier
+                    .padding(4.dp)
+                    .fillMaxWidth(),
+            ) {
+                TipContents(tip = tip, onDismiss = onDismiss)
             }
         }
     }
 }
 
-class TipScopeImpl : TipScope {
-    override fun buildTip(tip: Tip): @Composable () -> Unit {
-        return { TipDefaults.Content(tip = tip) }
+private class TipScopeImpl : TipScope {
+    override fun buildPopupTip(tip: Tip): @Composable () -> Unit {
+        return { TipDefaults.PopupContent(tip = tip) }
+    }
+
+    override fun buildInlineTip(tip: Tip, onDismiss: () -> Unit): @Composable () -> Unit {
+        return { TipDefaults.InlineContent(tip = tip, onDismiss = onDismiss) }
     }
 }
-
-data class TipLocation(
-    val tip: Tip? = null,
-    val content: @Composable () -> Unit = { },
-    val anchorPosition: Offset = Offset.Zero,
-    val anchorSize: IntSize = IntSize.Zero,
-    val alignment: Alignment = Alignment.TopCenter,
-)
-
-abstract class TipProvider {
-    abstract fun show(data: TipLocation)
-    abstract fun dismiss()
-    abstract fun onActionClicked(action: TipAction)
-
-    open val isTipShowing: Boolean = false
-}
-
-class NoOpTipProvider : TipProvider() {
-    override fun show(data: TipLocation) = Unit
-    override fun dismiss() = Unit
-
-    override fun onActionClicked(action: TipAction) = Unit
-}
-
-val LocalTipProvider =
-    staticCompositionLocalOf<TipProvider> { NoOpTipProvider() }
-val LocalTipScope =
-    staticCompositionLocalOf<TipScope> { NoOpTipScopeImpl() }
 
 @Composable
 fun TipScaffold(
@@ -162,16 +169,17 @@ fun TipScaffold(
     content: @Composable TipScope.() -> Unit
 ) {
     var emission by remember {
-        mutableStateOf<TipLocation?>(null)
+        mutableStateOf<TipPresentation?>(null)
     }
 
     val composeScope = rememberCoroutineScope()
-    BoxWithConstraints(modifier = Modifier
-        .fillMaxSize()
-        .then(modifier)
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier)
     ) {
         val tipProvider = object : TipProvider() {
-            override fun show(data: TipLocation) {
+            override fun show(data: TipPresentation) {
                 emission = data
             }
 
@@ -192,25 +200,52 @@ fun TipScaffold(
                 get() = emission != null
         }
 
+        val density = LocalDensity.current
+
         CompositionLocalProvider(
             LocalTipsEngine provides tipsEngine,
             LocalTipProvider provides tipProvider,
             LocalTipScope provides tipScope
         ) {
             tipScope.content()
-            emission?.let { tip ->
-                Box(modifier = Modifier
-                    .layout { measurable, constraints ->
-                        val placeable = measurable.measure(constraints)
-                        layout(placeable.width, placeable.height) {
-                            placeable.place(
-                                tip.anchorPosition.x.roundToInt() + tip.anchorSize.width / 2 - placeable.width / 2,
-                                tip.anchorPosition.y.roundToInt() + tip.anchorSize.height
-                            )
+            emission?.let { data ->
+                when (data) {
+                    is PopupData -> {
+                        val paddingPx = with(density) { data.padding.toPx() }
+                        Box(modifier = Modifier
+                            .layout { measurable, constraints ->
+                                val tip = measurable.measure(constraints)
+                                layout(tip.width, tip.height) {
+                                    tipProvider.debugLog(
+                                        "anchorPosition (${data.anchorPosition})," +
+                                                " anchorSize (${data.anchorSize}), " +
+                                                " padding ${paddingPx}px, " +
+                                                " tip width ${tip.width}, " +
+                                                " tip height ${tip.height}, " +
+                                                " maxWidth=${constraints.maxWidth}, " +
+                                                " maxHeight=${constraints.maxHeight}"
+                                    )
+
+                                    val (x, y) = getCoordinatesForPlacement(
+                                        constraints,
+                                        data.alignment,
+                                        data.anchorPosition,
+                                        data.anchorSize,
+                                        paddingPx,
+                                        tip
+                                    ) { tipProvider.debugLog(it) }
+
+                                    tip.place(x, y)
+                                }
+                            }
+                        ) {
+                            data.content()
                         }
                     }
-                ) {
-                    tip.content()
+
+                    is InlineTipData -> {
+                        // This type is handled inline
+                    }
                 }
             }
         }
