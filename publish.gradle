@@ -1,0 +1,37 @@
+apply plugin: "com.vanniktech.maven.publish"
+
+def tag = "git describe --tags --abbrev=0".execute().text.trim()
+
+group = "dev.bmcreations.tipkit"
+version = tag
+
+mavenPublishing {
+    publishToMavenCentral("S01")
+
+//    signAllPublications()
+
+    pom {
+        inceptionYear.set("2023")
+        name.set("TipKit")
+        description.set("Android implementation of TipKit in Jetpack Compose")
+        url.set("https://github.com/bmcreations/tipkit")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("bmcreations")
+                name.set("bmcreations")
+                email.set("contact@bmcreations.dev")
+            }
+        }
+        scm {
+            connection.set("scm:git:git://github.com/bmcreations/tipkit.git")
+            developerConnection.set("scm:git:ssh://github.com/bmcreations/tipkit.git")
+            url.set("https://github.com/bmcreations/tipkit")
+        }
+    }
+}

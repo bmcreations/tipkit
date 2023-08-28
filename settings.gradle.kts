@@ -16,4 +16,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "AndroidTipKit"
 include(":app")
-include(":lib")
+include(":tipkit")
+include(":tipkit-m2")
+include(":tipkit-m3")

@@ -5,5 +5,11 @@ plugins {
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.serialization) apply false
     id("com.google.dagger.hilt.android") version "2.46.1" apply false
+    id("com.vanniktech.maven.publish") version "0.25.3"
+    alias(libs.plugins.androidLibrary) apply false
 }
+
+group = "dev.bmcreations.tipkit"
+version = "0.1.0"
+
 true // Needed to make the Suppress annotation work for the plugins block
